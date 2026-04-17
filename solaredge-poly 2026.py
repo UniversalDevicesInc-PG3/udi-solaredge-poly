@@ -131,11 +131,10 @@ class Controller(udi_interface.Node):
             self.rate_limit = 5
             LOGGER.info('parameter rate_limit ' + str(self.rate_limit))
                 
-        
+        LOGGER.debug("Version 1.1.5 " + data)
         if validKey:
             self.api_key = self.Parameters['api_key']
             data = _api_request('/version/current?api_key='+self.api_key)
-            LOGGER.debug("Version 1.1.5 " + data)
             if data is None:
                 LOGGER.info('API request failed. Invalid api key?')
                 return
