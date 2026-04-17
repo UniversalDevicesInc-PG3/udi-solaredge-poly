@@ -135,6 +135,7 @@ class Controller(udi_interface.Node):
         if validKey:
             self.api_key = self.Parameters['api_key']
             data = _api_request('/version/current?api_key='+self.api_key)
+            LOGGER.debug("Version 1.1.5 " + data)
             if data is None:
                 LOGGER.info('API request failed. Invalid api key?')
                 return
