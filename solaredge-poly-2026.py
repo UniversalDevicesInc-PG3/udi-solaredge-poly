@@ -40,13 +40,13 @@ def _end_time(site_tz):
 def _start_time_midnight(site_tz):
     today = datetime.now(timezone.utc)
     LOGGER.debug("_start_time_midnight " + today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
+    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%2000:00:00')
 
 def _end_time_midnight(site_tz):
     today = datetime.now(timezone.utc) 
     tomorrow = today + timedelta(hours=24)
     LOGGER.debug("_end_time_midnight " + tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
+    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%2000:00:00')
 
 '''
 def floor_dt(dt, delta):
