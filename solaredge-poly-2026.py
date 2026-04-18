@@ -136,10 +136,9 @@ class Controller(udi_interface.Node):
             self.rate_limit = 5
             LOGGER.info('parameter rate_limit ' + str(self.rate_limit))
                 
-        LOGGER.debug("Version 1.1.5 ")
-        if validKey:
-            self.api_key = self.Parameters['api_key']
-            site_list = _api_request('/sites/list?api_key='+self.api_key)
+            if validKey:
+                self.api_key = self.Parameters['api_key']
+                site_list = _api_request('/sites/list?api_key='+self.api_key)
             if site_list is None:
                 LOGGER.info('API request failed. Invalid api key?')
                 return
@@ -557,6 +556,9 @@ class SEEnergyDay(udi_interface.Node):
             last_minute = round(((datetime.now() - self.last_date) / timedelta(seconds=60)),1)
             LOGGER.info('initial energy today last_minute ' + str(last_minute))
             
+            url = '/site/'+self.site_id+'/energyDetails?timeUnit=DAY&startTime='+_start_time_midnight(self.site_tz)+'&endTime='+_end_time_midnight(self.site_tz)+'&api_key='+self.key
+            LOGGER.info ("energy today  " + url)
+            
             if ((last_minute >= self.rate) | (last_minute == 0.0)):
 
                 url = '/site/'+self.site_id+'/energyDetails?timeUnit=DAY&startTime='+_start_time_midnight(self.site_tz)+'&endTime='+_end_time_midnight(self.site_tz)+'&api_key='+self.key
@@ -815,7 +817,7 @@ class SEOverview(udi_interface.Node):
                 LOGGER.debug("overview url = " + url)
                 overview_data = _api_request(url)
 
-                LOGGER.debug(overview_data)
+                LOGGER.debug("overview data  " + str(overview_data))
 
                 if overview_data is None:
                     return False
