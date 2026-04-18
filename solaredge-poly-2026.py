@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 #import debugpy.......
-import udi_interface
+import udi_interface # type: ignore
 import sys
 import http.client
 import requests
 from datetime import datetime, timedelta
-import pytz
+import pytz # type: ignore
 import logging
 import json
 import math
@@ -38,12 +38,14 @@ def _end_time(site_tz):
 
 
 def _start_time_midnight(site_tz):
-    today = datetime.utcnow().replace(tzinfo=pytz.utc)    
+    today = datetime.now(datetime.timezone.utc)().replace(tzinfo=pytz.utc)    
+    LOGGER.debug("_start_time_midnight " + today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
 
 def _end_time_midnight(site_tz):
-    today = datetime.utcnow().replace(tzinfo=pytz.utc)  
+    today = datetime.now(datetime.timezone.utc)().replace(tzinfo=pytz.utc)  
     tomorrow = today + timedelta(hours=24)
+    LOGGER.debug("_end_time_midnight " + tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
 
 '''
@@ -72,7 +74,7 @@ def _api_request(url):
         c = requests.get(full)
         if c.status_code != 200:
             LOGGER.error('API request failed with status code: {}'.format(c.status_code))
-            LOGGER.error('Response: {}'.format(c.text))
+            LOGGER.error('call=  ' + full + ', Response: {}'.format(c.text))
             c.close()
             return None
         jdata = c.json()
@@ -856,7 +858,7 @@ if __name__ == "__main__":
     try:
        
         polyglot = udi_interface.Interface([])
-        polyglot.start("1.1.5")
+        polyglot.start("1.1.8")
         Controller(polyglot, 'controller', 'controller', 'SolarEdge')
         polyglot.runForever()
     except (KeyboardInterrupt, SystemExit):
