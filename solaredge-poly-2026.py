@@ -27,23 +27,23 @@ last_date = datetime.now() - timedelta(minutes=6) #make sure API gets run initia
 
 def _start_time(site_tz):
     # Returns site datetime - 60 minutes
-    st_time = datetime.utcnow().replace(tzinfo=pytz.utc) - timedelta(minutes=60)
+    st_time = datetime.now(timezone.utc) - timedelta(minutes=60)
     return st_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S')
     
 def _end_time(site_tz):
     # Returns current site time
-    utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
+    utc_time = datetime.now(timezone.utc)
     LOGGER.debug("_end_time " + utc_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return utc_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S')
 
 
 def _start_time_midnight(site_tz):
-    today = datetime.now(datetime.timezone.utc)
+    today = datetime.now(timezone.utc)
     LOGGER.debug("_start_time_midnight " + today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
 
 def _end_time_midnight(site_tz):
-    today = datetime.now(datetime.timezone.utc) 
+    today = datetime.now(timezone.utc) 
     tomorrow = today + timedelta(hours=24)
     LOGGER.debug("_end_time_midnight " + tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
