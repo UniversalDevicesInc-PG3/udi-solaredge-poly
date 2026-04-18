@@ -70,6 +70,11 @@ def _api_request(url):
     full = 'https://' + SE_API_URL + url
     try:
         c = requests.get(full)
+        if c.status_code != 200:
+            LOGGER.error('API request failed with status code: {}'.format(c.status_code))
+            LOGGER.error('Response: {}'.format(c.text))
+            c.close()
+            return None
         jdata = c.json()
         c.close()
     except Exception as e:
@@ -131,19 +136,21 @@ class Controller(udi_interface.Node):
             self.rate_limit = 5
             LOGGER.info('parameter rate_limit ' + str(self.rate_limit))
                 
-        LOGGER.debug("Version 1.1.5 " + data)
+        LOGGER.debug("Version 1.1.5 ")
         if validKey:
             self.api_key = self.Parameters['api_key']
-            data = _api_request('/version/current?api_key='+self.api_key)
-            if data is None:
+            site_list = _api_request('/sites/list?api_key='+self.api_key)
+            if site_list is None:
                 LOGGER.info('API request failed. Invalid api key?')
                 return
 
-            if 'version' in data:
-                LOGGER.info(f"Successfully connected to the SolarEdge API Version {data['version']}")
+            num_sites = int(site_list['sites']['count'])
+            LOGGER.info('Found {} sites'.format(num_sites))
+            if num_sites >0:
+                LOGGER.info(f"Successfully connected to the SolarEdge API")
                 self.discover()
             else:
-                LOGGER.error('API request failed: {}'.format(json.dumps(data)))
+                LOGGER.error('API request failed: {}'.format(json.dumps(site_list)))
                 self.api_close()
             self.api_close()
 
@@ -847,7 +854,7 @@ if __name__ == "__main__":
     try:
        
         polyglot = udi_interface.Interface([])
-        polyglot.start("1.1.5")
+        polyglot.start("1.1.7")
         Controller(polyglot, 'controller', 'controller', 'SolarEdge')
         polyglot.runForever()
     except (KeyboardInterrupt, SystemExit):
