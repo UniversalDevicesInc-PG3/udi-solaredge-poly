@@ -5,7 +5,7 @@ import udi_interface # type: ignore
 import sys
 import http.client
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pytz # type: ignore
 import logging
 import json
@@ -38,15 +38,15 @@ def _end_time(site_tz):
 
 
 def _start_time_midnight(site_tz):
-    today = datetime.now(datetime.timezone.utc)().replace(tzinfo=pytz.utc)    
+    today = datetime.now(datetime.timezone.utc)
     LOGGER.debug("_start_time_midnight " + today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
+    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
 
 def _end_time_midnight(site_tz):
-    today = datetime.now(datetime.timezone.utc)().replace(tzinfo=pytz.utc)  
+    today = datetime.now(datetime.timezone.utc) 
     tomorrow = today + timedelta(hours=24)
     LOGGER.debug("_end_time_midnight " + tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
+    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:00:00')
 
 '''
 def floor_dt(dt, delta):
@@ -815,7 +815,9 @@ class SEOverview(udi_interface.Node):
                 
             if ((last_minute >= self.rate) | (last_minute == 0.0)):
 
-                url = '/site/'+self.site_id+'/overview/'+'?api_key='+self.key
+                url = '/site/'+self.site_id+'/overview'+'?api_key='+self.key
+                # removed trailing / from overview, failed v2 API
+
                 LOGGER.debug("overview url = " + url)
                 overview_data = _api_request(url)
 
