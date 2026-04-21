@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 #import debugpy.......
-import udi_interface # type: ignore
+import udi_interface
 import sys
 import http.client
 import requests
-from datetime import datetime, timedelta, timezone
-import pytz # type: ignore
+from datetime import datetime, timedelta
+import pytz
 import logging
 import json
 import math
@@ -27,26 +27,24 @@ last_date = datetime.now() - timedelta(minutes=6) #make sure API gets run initia
 
 def _start_time(site_tz):
     # Returns site datetime - 60 minutes
-    st_time = datetime.now(timezone.utc) - timedelta(minutes=60)
+    st_time = datetime.utcnow().replace(tzinfo=pytz.utc) - timedelta(minutes=60)
     return st_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S')
     
 def _end_time(site_tz):
     # Returns current site time
-    utc_time = datetime.now(timezone.utc)
+    utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
     LOGGER.debug("_end_time " + utc_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
     return utc_time.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S')
 
 
 def _start_time_midnight(site_tz):
-    today = datetime.now(timezone.utc)
-    LOGGER.debug("_start_time_midnight " + today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%2000:00:00')
+    today = datetime.utcnow().replace(tzinfo=pytz.utc)    
+    return today.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
 
 def _end_time_midnight(site_tz):
-    today = datetime.now(timezone.utc) 
+    today = datetime.utcnow().replace(tzinfo=pytz.utc)  
     tomorrow = today + timedelta(hours=24)
-    LOGGER.debug("_end_time_midnight " + tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%20%H:%M:%S'))
-    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%2000:00:00')
+    return tomorrow.astimezone(pytz.timezone(site_tz)).strftime('%Y-%m-%d%%200:0:0')
 
 '''
 def floor_dt(dt, delta):
@@ -72,11 +70,6 @@ def _api_request(url):
     full = 'https://' + SE_API_URL + url
     try:
         c = requests.get(full)
-        if c.status_code != 200:
-            LOGGER.error('API request failed with status code: {}'.format(c.status_code))
-            LOGGER.error('call=  ' + full + ', Response: {}'.format(c.text))
-            c.close()
-            return None
         jdata = c.json()
         c.close()
     except Exception as e:
@@ -138,20 +131,19 @@ class Controller(udi_interface.Node):
             self.rate_limit = 5
             LOGGER.info('parameter rate_limit ' + str(self.rate_limit))
                 
-            if validKey:
-                self.api_key = self.Parameters['api_key']
-                site_list = _api_request('/sites/list?api_key='+self.api_key)
-            if site_list is None:
+        
+        if validKey:
+            self.api_key = self.Parameters['api_key']
+            data = _api_request('/version/current?api_key='+self.api_key)
+            if data is None:
                 LOGGER.info('API request failed. Invalid api key?')
                 return
 
-            num_sites = int(site_list['sites']['count'])
-            LOGGER.info('Found {} sites'.format(num_sites))
-            if num_sites >0:
-                LOGGER.info(f"Successfully connected to the SolarEdge API")
+            if 'version' in data:
+                LOGGER.info(f"Successfully connected to the SolarEdge API Version {data['version']}")
                 self.discover()
             else:
-                LOGGER.error('API request failed: {}'.format(json.dumps(site_list)))
+                LOGGER.error('API request failed: {}'.format(json.dumps(data)))
                 self.api_close()
             self.api_close()
 
@@ -558,9 +550,6 @@ class SEEnergyDay(udi_interface.Node):
             last_minute = round(((datetime.now() - self.last_date) / timedelta(seconds=60)),1)
             LOGGER.info('initial energy today last_minute ' + str(last_minute))
             
-            url = '/site/'+self.site_id+'/energyDetails?timeUnit=DAY&startTime='+_start_time_midnight(self.site_tz)+'&endTime='+_end_time_midnight(self.site_tz)+'&api_key='+self.key
-            LOGGER.info ("energy today  " + url)
-            
             if ((last_minute >= self.rate) | (last_minute == 0.0)):
 
                 url = '/site/'+self.site_id+'/energyDetails?timeUnit=DAY&startTime='+_start_time_midnight(self.site_tz)+'&endTime='+_end_time_midnight(self.site_tz)+'&api_key='+self.key
@@ -815,13 +804,11 @@ class SEOverview(udi_interface.Node):
                 
             if ((last_minute >= self.rate) | (last_minute == 0.0)):
 
-                url = '/site/'+self.site_id+'/overview'+'?api_key='+self.key
-                # removed trailing / from overview, failed v2 API
-
+                url = '/site/'+self.site_id+'/overview/'+'?api_key='+self.key
                 LOGGER.debug("overview url = " + url)
                 overview_data = _api_request(url)
 
-                LOGGER.debug("overview data  " + str(overview_data))
+                LOGGER.debug(overview_data)
 
                 if overview_data is None:
                     return False
@@ -860,7 +847,7 @@ if __name__ == "__main__":
     try:
        
         polyglot = udi_interface.Interface([])
-        polyglot.start("1.1.8")
+        polyglot.start("1.1.04")
         Controller(polyglot, 'controller', 'controller', 'SolarEdge')
         polyglot.runForever()
     except (KeyboardInterrupt, SystemExit):
